@@ -41,7 +41,7 @@ EXPdataset$catype <- factor(EXPdataset$catype,levels = showtypes)
 ggplot(SDAdataset[SDAdataset$catype %in% showtypes,], aes(x=catype, y=SDA, fill=virus)) +  
   geom_violin(position=position_dodge(1)) +
   theme_classic() +
-  stat_compare_means(aes(label = ..p.signif..),na.rm=T, method="wilcox.test") +
+  stat_summary(position=position_dodge(1),fun.y=median, geom="point", shape=23, size=2) + 
   scale_fill_manual(values=c("#f8766d","#51ad00","#5647ea","#ffda00")) + 
   theme(axis.text.x=element_text(size = rel(1), angle=45, hjust=1, vjust =  1)) +
   labs(title="Coronaviruses",y = "SDA")
