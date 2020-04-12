@@ -1,6 +1,6 @@
 # tRNA_viruses
 
-This repository includes the code upon submission used to reproduce the results and plots of the manuscript "Correspondence of tissue-specific translational efficiencies with the codon usage of human-infecting viruses". Data used in the code must be first downloaded in a "data" subdirectory:
+This repository includes the code upon submission used to reproduce the results and plots of the manuscript "Translational adaptation of human viruses to the tissues they infect". Data used in the code must be first downloaded in a "data" subdirectory:
 - Codon usage of human-infecting viruses from CoCoPUT: https://hive.biochemistry.gwu.edu/dna.cgi?cmd=codon_usage&id=576245. Find it also in Table S1.
 - List of viruses and their associtaed information: Table S1.
 - Supply-to-Demand Adaptation weights of all TCGA samples: http://www.synapse.org/tRNA_TCGA
