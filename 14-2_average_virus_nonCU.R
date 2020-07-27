@@ -1,4 +1,3 @@
-
 extract_cod <- function (trnas, anticod){
   output = data.frame(row.names = anticod)
   trnas_acod = sapply(rownames(trnas), function(x) substr(x,nchar(x)-2,nchar(x)))
@@ -46,22 +45,13 @@ transformdata <- function(data,transf){
 
 # Codon table
 codons = read.csv("data/codons_table.tab", sep="\t", row.names = 1)
-# ViralZone virus list
-viralzone = read.csv("data/ViralZone_human_viruses.tsv",sep="\t")
-VZaccessions = unlist(sapply(as.character(viralzone$Genome), function(x) unlist(strsplit(x,", "))))
 
-# Human CU
-#https://www.ncbi.nlm.nih.gov/genomes/GenomesGroup.cgi?taxid=10239
-codus = read.csv("data/refseq_humanvirus_CoCoPUT.tsv",sep="\t")
-# Keep only the restricted ViralZone list
-#codus = codus[codus$Accession %in% VZaccessions,]
-
-codus_clean = t(codus[,14:ncol(codus)])
+#### FRAME 1 ####
+codus = read.csv("data/refseq_humanvirus_frame1.tsv",sep="\t")
+codus_clean = t(codus[,11:ncol(codus)])
 
 # Compute the RCU
 rownames(codus_clean) = sapply(rownames(codus_clean),function(x) paste(codons[x,"AA"],x,sep=""))
-
-#### RELATIVE AT PROTEIN LEVEL ####
 codon = transformdata(codus_clean,"rel")
 
 # Compute average of each species
@@ -70,14 +60,32 @@ species[,rownames(codon)] = t(sapply(rownames(species),
                                     function(x) if (sum(codus$Species %in% x)>1){rowMeans(codon[,codus$Species %in% x],na.rm=T)}
                                     else if (sum(codus$Species %in% x)==1){codon[,codus$Species %in% x]}))
 # Save output
-write.csv(species,"results/virus_RCUs_RelbyProt.csv")
+write.csv(species,"results/virus_frame1RCUs_RelbyProt.csv")
 
-#### RELATIVE AT SPECIES LEVEL ####
-# Compute sum of each species
+#### FRAME 2 ####
+codus = read.csv("data/refseq_humanvirus_frame2.tsv",sep="\t")
+codus_clean = t(codus[,11:ncol(codus)])
+
+# Compute the RCU
+rownames(codus_clean) = sapply(rownames(codus_clean),function(x) paste(codons[x,"AA"],x,sep=""))
+codon = transformdata(codus_clean,"rel")
+
+# Compute average of each species
 species = data.frame(row.names=as.character(unique(codus$Species)))
-species[,rownames(codus_clean)] = t(sapply(rownames(species), 
-                                     function(x) if (sum(codus$Species %in% x)>1){rowSums(codus_clean[,codus$Species %in% x],na.rm=T)}
-                                     else if (sum(codus$Species %in% x)==1){codus_clean[,codus$Species %in% x]}))
-codon = transformdata(t(species),"rel")
+species[,rownames(codon)] = t(sapply(rownames(species), 
+                                     function(x) if (sum(codus$Species %in% x)>1){rowMeans(codon[,codus$Species %in% x],na.rm=T)}
+                                     else if (sum(codus$Species %in% x)==1){codon[,codus$Species %in% x]}))
 # Save output
-write.csv(t(codon),"results/virus_RCUs_RelbySpecies.csv")
+write.csv(species,"results/virus_frame2RCUs_RelbyProt.csv")
+
+#### DINUCLEOTIDES ####
+codus = read.csv("data/refseq_humanvirus_dinucleotides.tsv",sep="\t")
+codon = t(codus[,11:ncol(codus)])
+
+# Compute average of each species
+species = data.frame(row.names=as.character(unique(codus$Species)))
+species[,rownames(codon)] = t(sapply(rownames(species), 
+                                     function(x) if (sum(codus$Species %in% x)>1){rowMeans(codon[,codus$Species %in% x],na.rm=T)}
+                                     else if (sum(codus$Species %in% x)==1){codon[,codus$Species %in% x]}))
+# Save output
+write.csv(species,"results/virus_dinucleotides_RelbyProt.csv")

@@ -24,6 +24,7 @@ keep = [s for s in tropism.dropna(subset=["tropism"]).index if s in data.index]
 
 ## Discriminant analysis
 targets = tropism.loc[keep,"tropism"]
+targets.loc[:] = list(targets.sample(frac=1))
 data = species.loc[keep,:]
    
 ## Discriminant analysis
@@ -52,13 +53,10 @@ colors = cmap(np.arange(len(labels))/(len(labels)-1))
 handles = [mlines.Line2D([], [], marker='o', color=c, alpha=0.5) for c in colors]
 
 for label, color in zip(labels,colors):
-    idx = list([s in tropism.loc[tropism.loc[:,"tropism"]==label,:].index for s in principalDf.index])
+    idx = list([s in targets.loc[targets==label].index for s in principalDf.index])
     ax.scatter(principalDf.loc[idx, 'PCA1'], principalDf.loc[idx, 'PCA2'], c = color, s = 50, alpha=0.5)
 #    for lab in principalDf.index[idx]:
 #       ax.annotate(lab,[principalDf.loc[lab, 'PCA1'],principalDf.loc[lab, 'PCA2']],fontsize=8)
+
 fig.legend(handles,labels,loc="center right")
 ax.grid()
-
-
-#%% Save
-principalDf.to_csv("results/DiscriminantAnalysis_relbyprot_tropism.csv")

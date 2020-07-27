@@ -3,12 +3,10 @@ library(ggpubr)
 
 # Load tAIs
 TAIs = read.csv("results/tAI_viralinfection.csv", row.names = 1)
-# Remove zika virus (it has no early and late proteins) and "macrophage"dataset, since patient data is very variable
-TAIs = TAIs[!(TAIs$Species %in% "Zika virus"),!grepl("macrophages|hNSC",colnames(TAIs))]
 
 # Build dataset
 dataset = c()
-for (s in colnames(TAIs)[1:41]){
+for (s in colnames(TAIs)[1:27]){
   cell = strsplit(s,"_|\\.")[[1]][1]
   virus = strsplit(s,"_|\\.")[[1]][2]
   cond = strsplit(s,"_|\\.")[[1]][3]

@@ -35,6 +35,8 @@ for (l in labels){
 }
 # Fix order of tissues along the descending respiratory tract
 EXPdataset$catype <- factor(EXPdataset$catype,levels = showtypes)
+EXPdataset$gene <- factor(EXPdataset$gene,levels = c("ACE2","TMPRSS2","BSG","DPP4","ST3GAL4","ST6GAL1"))
+
 
 # Plot
 # Set cancer types to plot
@@ -57,6 +59,13 @@ ggplot(EXPdataset[EXPdataset$catype %in% showtypes,], aes(x=catype, y=expression
   geom_point() +
   theme(axis.text.x=element_text(size = rel(1), angle=45, hjust=1, vjust =  1)) +
   labs(title="Coronaviruses",y = "Expression")
+
+ggplot(EXPdataset[EXPdataset$catype %in% showtypes,], aes(x=catype, y="", size=expression)) +  
+  geom_point(alpha = 0.8) + 
+  facet_grid(gene ~ .) +
+  theme_classic() +
+  scale_size(range = c(1, 12)) +
+  labs(title="Coronaviruses",y = "Proteins")
 
 ## Plot the rest of tissues (only show average SDA)
 cancer_types = c("HNSC","LUSC","LUAD","CESC","UCEC","BLCA","PRAD","SKCM","BRCA","THCA","ESCA","STAD","COAD","READ","PAAD","LIHC","CHOL","KIRC","KIRP","KICH","PCPG","GBM","THYM")

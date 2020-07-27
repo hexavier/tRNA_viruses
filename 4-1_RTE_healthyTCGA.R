@@ -80,14 +80,13 @@ anticodon = trna_mean
 # Genomic codon usage
 codus = read.csv("data/refseq_humanvirus_CoCoPUT.tsv",sep="\t", row.names = 1)
 # Keep only columns with codon info
-codus_clean = data.frame(sapply(rownames(codus),function(x) as.numeric(codus[x,15:ncol(codus)])), row.names = colnames(codus)[15:ncol(codus)])
+codus_clean = data.frame(sapply(rownames(codus),function(x) as.numeric(codus[x,13:ncol(codus)])), row.names = colnames(codus)[13:ncol(codus)])
 rownames(codus_clean) = sapply(rownames(codus_clean),function(x) paste(codons[x,"AA"],x,sep=""))
 
 ## Calculate tAI for genomic CU
 codon = extract_cod(transformdata(codus_clean,""),rownames(codons)[!(codons$AA %in% c("Stop","Met"))])
 
 TAIs = data.frame(matrix(ncol = ncol(anticodon), nrow = ncol(codon)),row.names = colnames(codon)); colnames(TAIs) = colnames(anticodon)
-initial_s = c(0, 0, 0, 0, 0.5, 0.5, 0.75, 0.5, 0.5)
 # Calculate tAI
 for (sample in colnames(anticodon)){
   # Calculate relative adaptiveness values (ws)

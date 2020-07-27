@@ -53,7 +53,7 @@ codons = read.csv("data/codons_table.tab", sep="\t", row.names = 1)
 codus = read.csv("data/refseq_humanvirus_CoCoPUT.tsv",sep="\t")
 is_str = grep("Xs",codus$annotation)
 codus=codus[is_str,]
-codus_clean = t(codus[,16:ncol(codus)])
+codus_clean = t(codus[,14:ncol(codus)])
 
 # Compute the RCU
 rownames(codus_clean) = sapply(rownames(codus_clean),function(x) paste(codons[x,"AA"],x,sep=""))
