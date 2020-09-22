@@ -15,7 +15,7 @@ from sklearn.preprocessing import StandardScaler
 import matplotlib.lines as mlines
 
 #%% Load data
-species = pd.read_csv("results/virus_RCUs_RelbyProt.csv",index_col=0)
+species = pd.read_csv("results/ViralZone_virus_RCUs_RelbyProt.csv",index_col=0)
 tropism = pd.read_csv("data/virus_list.tsv", sep="\t" ,index_col=0)
 
 #%% PCA virus
