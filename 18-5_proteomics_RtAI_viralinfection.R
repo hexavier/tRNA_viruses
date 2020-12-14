@@ -71,15 +71,13 @@ codons = read.csv("data/codons_table.tab", sep="\t", row.names = 1)
 trna = read.csv("data/viralinfection_tRNAs.csv",row.names = 1)
 trna = extract_cod(transformdata(trna,"sqrt"),codons$ANTICODON)
 
-# Genomic codon usage
-codus = read.csv("data/refseq_humanvirus_CoCoPUT.tsv",sep="\t", row.names = 1)
+# Codon usage
+codus = read.csv("data/proteomics/refseq_proteomics_codoncount.tsv",sep="\t", row.names = 1)
+# Keep only columns with codon info
+colnames(codus) = sapply(colnames(codus),function(x) paste(codons[x,"AA"],x,sep=""))
 
-# Convert booleans in codus_ids to string index. If more than 1, take mean
-codus_clean = data.frame(sapply(rownames(codus),function(x) as.numeric(codus[x,15:ncol(codus)])), row.names = colnames(codus)[15:ncol(codus)])
-rownames(codus_clean) = sapply(rownames(codus_clean),function(x) paste(codons[x,"AA"],x,sep=""))
-
-# Prepare codon data
-codon = extract_cod(transformdata(codus_clean,""),rownames(codons)[!(codons$AA %in% c("Stop","Met"))])
+## Calculate tAI for genomic CU
+codon = extract_cod(transformdata(t(codus),""),rownames(codons)[!(codons$AA %in% c("Stop","Met"))])
 
 # Calculate tAI
 initial_s = c(0, 0, 0, 0, 0.5, 0.5, 0.75, 0.5, 0.5)
@@ -97,10 +95,4 @@ for (sample in colnames(anticodon)){
   TAIs[,sample] = sample.tai
 }
 
-TAIs[,c("annotation","Accession","Species")] = codus[,c("annotation","Accession","Species")]
-
-# Keep only interesting ones
-tokeep = c("Human immunodeficiency virus 1","Human betaherpesvirus 5","Human alphaherpesvirus 1")
-TAIs = TAIs[TAIs$Species %in% tokeep,]
-
-write.csv(TAIs,"results/RtAI_viralinfection.csv")
+write.csv(TAIs,"results/RtAI_proteomics_viralinfection.csv")

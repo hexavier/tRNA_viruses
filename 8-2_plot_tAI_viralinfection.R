@@ -2,7 +2,7 @@ library(ggplot2)
 library(ggpubr)
 
 # Load tAIs
-TAIs = read.csv("results/tAI_viralinfection.csv", row.names = 1)
+TAIs = read.csv("results/RtAI_viralinfection.csv", row.names = 1)
 
 # Build dataset
 dataset = c()
@@ -14,11 +14,15 @@ for (s in colnames(TAIs)[1:27]){
   idx = (TAIs$abbreviation %in% virus)
   temp_tai = TAIs[idx,s,drop=F]
   explabels = TAIs[idx,"expression"]
+  isXr = grep("Xr",as.character(TAIs[idx,"vogdb_annotation"]))
+  isXs = grep("Xs",as.character(TAIs[idx,"vogdb_annotation"]))
   # Keep data
   dataset_temp = data.frame(row.names = 1:nrow(temp_tai))
   dataset_temp$tai = as.numeric(unlist(temp_tai))
   dataset_temp$protein = rownames(temp_tai)
   dataset_temp$expression = explabels
+  dataset_temp$vog = NA
+  dataset_temp[isXr,"vog"] = "Xr"; dataset_temp[isXs,"vog"] = "Xs"
   dataset_temp$virus = virus
   dataset_temp$cond = cond
   dataset_temp$cell = cell
@@ -28,7 +32,18 @@ for (s in colnames(TAIs)[1:27]){
 # Order genes
 dataset$expression <- factor(dataset$expression, levels = c("IE","E","L","polyprotein"))
 
+# Compute p-values and correct FDR
+diffexp1 = compare_means(tai~expression, data=dataset[!grepl("mock|uninf",dataset$cond),], group.by = c("cond","cell"), method="wilcox.test")
+diffexp2 = compare_means(tai~cond, data=dataset[!grepl("mock|uninf",dataset$cond),], group.by = c("expression","cell"), method="wilcox.test",paired=T)
+allcomp = merge(diffexp1,diffexp2,all=T)
+allcomp$p.corrected = p.adjust(allcomp$p,method="fdr")
 # Plot
+ggplot(dataset[!grepl("mock|uninf",dataset$cond),], aes(x=cond, y=tai, fill=expression)) +
+  facet_grid(. ~ cell+virus, scales = "free") +
+  geom_violin(position=position_dodge(1)) +
+  labs(title="tRNAs in infection",y = "tAI") + 
+  stat_summary(position=position_dodge(1),fun.y=median, geom="point", shape=23, size=2) + 
+  theme_classic()
 ggplot(dataset, aes(x=cond, y=tai, fill=expression)) +
   facet_grid(. ~ cell+virus, scales = "free") +
   geom_violin(position=position_dodge(1)) +
@@ -59,7 +74,7 @@ for (i in rownames(infect)){
   infect[i,"tai"] = infect[i,"tai"]-ctrl_tai
 }
 
-# Plot
+# Plot BOXPLOTS!!
 diffexp = compare_means(tai~expression, data=infect, group.by = c("cond","cell"), method="wilcox.test")
 ggplot(infect, aes(x=cond, y=tai, fill=expression)) +
   facet_grid(. ~ cell+virus, scales = "free") +

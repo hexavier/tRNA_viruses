@@ -130,8 +130,11 @@ for (v in rownames(Xr)){
     dataset = rbind(dataset, dataset_temp)
   }
 }
+# For polyprotein viruses or poorly annotated viruses, sometimes same protein is taken as Xr and Xs. Discard those
+dataset = dataset[!(duplicated(dataset[,c("virus","sample","RTE")])|duplicated(dataset[,c("virus","sample","RTE")],fromLast = T)),]
 
 # Plot delta by tropism
+diff = compare_means(RTE~subset,dataset,group.by = c("tropism"), paired = T, method = "wilcox.test")
 ggplot(dataset, aes(x=tropism, y=RTE, fill=subset)) +  
   geom_jitter(na.rm=T , size=1, alpha = 0.15 ,aes(color = subset), 
               position=position_jitterdodge(dodge.width=0.9)) +

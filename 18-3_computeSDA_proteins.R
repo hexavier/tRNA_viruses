@@ -1,5 +1,4 @@
 library(tAI)
-library(ggplot2)
 
 extract_cod <- function (trnas, anticod){
   output = data.frame(row.names = anticod)
@@ -8,6 +7,22 @@ extract_cod <- function (trnas, anticod){
     output[,s] = sapply(anticod, function(x) if(any(trnas_acod==x)){mean(trnas[trnas_acod==x,s])}else{0})
   }
   return(output)
+}
+
+AAnormalize <- function(data,codons){
+  # Compute relative data
+  aa = sapply(codons,function(x) substr(x,1,nchar(x)-3))
+  uniqueaa = unique(aa)
+  outdata = numeric(length=length(data))
+  for (n in uniqueaa){
+    idx = (aa %in% n)
+    total = max(data[idx],na.rm=T)
+    outdata[idx] = data[idx]/total
+    if (total %in% 0){
+      outdata[idx] = 1.0/sum(idx)
+    }
+  }
+  return(outdata)
 }
 
 transformdata <- function(data,transf){
@@ -46,48 +61,23 @@ transformdata <- function(data,transf){
   return(outdata)
 }
 
-AAnormalize <- function(data,codons){
-  # Compute relative data
-  aa = sapply(codons,function(x) substr(x,1,nchar(x)-3))
-  uniqueaa = unique(aa)
-  outdata = numeric(length=length(data))
-  for (n in uniqueaa){
-    idx = (aa %in% n)
-    #total = sum(data[idx],na.rm=T)
-    total = max(data[idx],na.rm=T)
-    outdata[idx] = data[idx]/total
-    if (total %in% 0){
-      outdata[idx] = 1.0/sum(idx)
-    }
-  }
-  return(outdata)
-}
-
 ## Load trna and weighted CU
 # Codon table
 codons = read.csv("data/codons_table.tab", sep="\t", row.names = 1)
 
 # tRNAs
-trna = read.csv("data/viralinfection_tRNAs.csv",row.names = 1)
-trna = extract_cod(transformdata(trna,"sqrt"),codons$ANTICODON)
+anticodon = t(read.csv("data/matched_AAcTE.csv",row.names = 1))
 
-# Genomic codon usage
-codus = read.csv("data/refseq_humanvirus_CoCoPUT.tsv",sep="\t", row.names = 1)
+# Codon usage
+codus = read.csv("data/proteomics/refseq_proteomics_codoncount.tsv",sep="\t", row.names = 1)
+# Keep only columns with codon info
+colnames(codus) = sapply(colnames(codus),function(x) paste(codons[x,"AA"],x,sep=""))
 
-# Convert booleans in codus_ids to string index. If more than 1, take mean
-codus_clean = data.frame(sapply(rownames(codus),function(x) as.numeric(codus[x,15:ncol(codus)])), row.names = colnames(codus)[15:ncol(codus)])
-rownames(codus_clean) = sapply(rownames(codus_clean),function(x) paste(codons[x,"AA"],x,sep=""))
-
-# Prepare codon data
-codon = extract_cod(transformdata(codus_clean,""),rownames(codons)[!(codons$AA %in% c("Stop","Met"))])
-
-# Calculate tAI
-initial_s = c(0, 0, 0, 0, 0.5, 0.5, 0.75, 0.5, 0.5)
-anticodon = apply(trna,2, get.ws, s=initial_s, sking=0)
-anticodon = apply(anticodon,2,AAnormalize,paste0(codons[rownames(codon),"AA"],rownames(codon)))# normalize by AA
-rownames(anticodon)= rownames(codon)
+## Calculate tAI for genomic CU
+codon = extract_cod(transformdata(t(codus),""),rownames(codons)[!(codons$AA %in% c("Stop","Met"))])
 
 TAIs = data.frame(matrix(ncol = ncol(anticodon), nrow = ncol(codon)),row.names = colnames(codon)); colnames(TAIs) = colnames(anticodon)
+initial_s = c(0, 0, 0, 0, 0.5, 0.5, 0.75, 0.5, 0.5)
 # Calculate tAI
 for (sample in colnames(anticodon)){
   # Calculate relative adaptiveness values (ws)
@@ -96,11 +86,4 @@ for (sample in colnames(anticodon)){
   sample.tai <- get.tai(t(codon), sample.ws)
   TAIs[,sample] = sample.tai
 }
-
-TAIs[,c("annotation","Accession","Species")] = codus[,c("annotation","Accession","Species")]
-
-# Keep only interesting ones
-tokeep = c("Human immunodeficiency virus 1","Human betaherpesvirus 5","Human alphaherpesvirus 1")
-TAIs = TAIs[TAIs$Species %in% tokeep,]
-
-write.csv(TAIs,"results/RtAI_viralinfection.csv")
+write.csv(TAIs,"results/proteomicsSDA.csv")
